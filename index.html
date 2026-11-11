@@ -146,6 +146,7 @@ main>h2{font-size:1.6rem;text-transform:capitalize;margin:26px 0 12px}
 <canvas id="sky" aria-hidden="true"></canvas>
 <main>
   <div class="topbar"><button id="redmode" role="switch" aria-checked="false" aria-pressed="false" title="Modo rojo: toda la pantalla en rojo tenue para no perder la visión nocturna"><span class="rm-label">Modo rojo</span><span class="rm-track" aria-hidden="true"><span class="rm-state">OFF</span><span class="rm-knob"></span></span></button></div>
+
   <section class="hero" aria-live="polite">
     <div id="heroMoon"></div>
     <div>
@@ -154,6 +155,21 @@ main>h2{font-size:1.6rem;text-transform:capitalize;margin:26px 0 12px}
       <dl id="heroData"></dl>
     </div>
   </section>
+
+  <section class="tonight" id="tonight" aria-live="polite"></section>
+
+  <h2 id="monthTitle"></h2>
+  <ul class="list" id="phases"></ul>
+
+  <section class="card" id="donde" aria-live="polite"></section>
+
+  <section class="card" id="tira" aria-label="Próximos 14 días"></section>
+
+  <section class="card ocho" id="ocho" aria-label="Las 8 fases"></section>
+
+  <section class="card events" id="eventos" aria-label="Próximos eventos"></section>
+
+  <section class="card" id="sol" aria-label="Sol y oscuridad"></section>
 
   <section class="card explorer" aria-label="Explorador de fecha">
     <h2>Explorar otra fecha</h2>
@@ -166,18 +182,6 @@ main>h2{font-size:1.6rem;text-transform:capitalize;margin:26px 0 12px}
     <label class="exp-time">Hora <input type="range" id="expTime" min="0" max="1439" step="15" value="720" aria-label="Hora del día"> <output id="expTimeLabel">12:00</output></label>
     <p class="exp-note" id="expNote"></p>
   </section>
-  <section class="tonight" id="tonight" aria-live="polite"></section>
-
-  <section class="card" id="donde" aria-live="polite"></section>
-
-  <section class="card" id="tira" aria-label="Próximos 14 días"></section>
-  <h2 id="monthTitle"></h2>
-  <ul class="list" id="phases"></ul>
-  <section class="card ocho" id="ocho" aria-label="Las 8 fases"></section>
-
-  <section class="card events" id="eventos" aria-label="Próximos eventos"></section>
-
-  <section class="card" id="sol" aria-label="Sol y oscuridad"></section>
 
   <section class="card" id="compartir" aria-label="Compartir y guardar">
     <h2>Compartir y guardar</h2>
