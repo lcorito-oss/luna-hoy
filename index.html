@@ -22,6 +22,34 @@
 }
 :root[data-theme="light"]{--bg:#f3f1ea;--panel:#fbfaf6;--line:#d9d5c8;--text:#171a22;--muted:#667085;--lit:#f4d98a;--dark:#3a4256;--accent:#1f7a3d;--accent-bg:#e4f1e2;--eclipse:#7047a1;color-scheme:light}
 :root[data-theme="dark"]{--bg:#05070d;--panel:#0d121c;--line:#1f2836;--text:#e8ebf2;--muted:#8c97ab;--lit:#e9e6da;--dark:#1a2030;--accent:#8fd694;--accent-bg:#122219;color-scheme:dark}
+:root[data-theme="red"]{--bg:#0a0201;--panel:#1a0505;--line:#ff5a4d33;--text:#ffd9d4;--muted:#e08a80;--lit:#ffd9d4;--dark:#2a0a08;--accent:#ff6b5e;--accent-bg:#ff3b3018;--eclipse:#ff8a7a;color-scheme:dark}
+/* Barra superior con el interruptor de modo rojo (mismo estilo que en cielo-actual) */
+.topbar{display:flex;justify-content:flex-end;padding-top:2px}
+#redmode{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:8px 4px;border:0;background:transparent;color:var(--text);font-weight:700;font-size:.85rem;cursor:pointer}
+#redmode:focus-visible{outline:2px solid #ff3b30;outline-offset:3px}
+.rm-label{white-space:nowrap}
+.rm-track{position:relative;flex:none;width:64px;height:30px;border-radius:999px;background:var(--dark);border:1px solid var(--line);transition:background .25s,border-color .25s,box-shadow .25s}
+.rm-knob{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #0008;transition:transform .25s}
+.rm-knob::after{content:"";position:absolute;inset:0;margin:auto;width:8px;height:8px;border-radius:50%;background:#ff3b30}
+.rm-state{position:absolute;top:50%;right:7px;transform:translateY(-50%);color:var(--muted);font-size:.6rem;font-weight:800;letter-spacing:.05em}
+#redmode[aria-checked="true"] .rm-track{background:#ff3b30;border-color:#ff3b30;box-shadow:0 0 18px #ff3b3088}
+#redmode[aria-checked="true"] .rm-knob{transform:translateX(36px);background:#ffd9d4}
+#redmode[aria-checked="true"] .rm-state{right:auto;left:8px;color:#fff}
+@media (prefers-reduced-motion:reduce){.rm-track,.rm-knob{transition:none}}
+/* Modo rojo nocturno: foto de la Luna, brillos, línea de tiempo, brújula y lunas pequeñas en rojo tenue */
+:root[data-theme="red"] .hero img,:root[data-theme="red"] .hero svg{filter:grayscale(.25) sepia(1) saturate(3.2) hue-rotate(-42deg) brightness(.88) drop-shadow(0 0 8px rgba(255,59,48,.55)) drop-shadow(0 0 22px rgba(255,59,48,.3)) drop-shadow(0 0 44px rgba(255,59,48,.16))}
+:root[data-theme="red"] .cell img,:root[data-theme="red"] .cell svg,:root[data-theme="red"] .tonight svg{filter:drop-shadow(0 0 4px rgba(255,59,48,.35))}
+:root[data-theme="red"] .tl-dia{background:#ff6b5e}
+:root[data-theme="red"] .tl-azul{background:#7a241c}
+:root[data-theme="red"] .tl-naut{background:#4a130e}
+:root[data-theme="red"] .tl-astro{background:#2a0805}
+:root[data-theme="red"] .tl-noche{background:#0a0201}
+:root[data-theme="red"] #moonNeedle circle[r="13"]{fill:#ffb3a7;stroke:#ffd9d4}
+:root[data-theme="red"] #moonNeedle circle[r="4"]{fill:#a03026}
+:root[data-theme="red"] radialGradient[id$="-night"] stop:first-child{stop-color:#3a1410}
+:root[data-theme="red"] radialGradient[id$="-night"] stop:last-child{stop-color:#160404}
+:root[data-theme="red"] radialGradient[id$="-shade"] stop:last-child{stop-color:#3a0d08}
+:root[data-theme="red"] svg circle[stroke="#d5d3ca"]{stroke:#ffb3a7}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
@@ -112,10 +140,12 @@ main>h2{font-size:1.6rem;text-transform:capitalize;margin:26px 0 12px}
 @media (max-width:520px){.rose{width:min(250px,80vw)}.compass-wrap{justify-content:center}.compass-data{flex-basis:100%}}
 
 </style>
+<script>try{if(localStorage.getItem('luna-hoy-red-mode')==='1')document.documentElement.setAttribute('data-theme','red');}catch(e){}</script>
 </head>
 <body>
 <canvas id="sky" aria-hidden="true"></canvas>
 <main>
+  <div class="topbar"><button id="redmode" role="switch" aria-checked="false" aria-pressed="false" title="Modo rojo: toda la pantalla en rojo tenue para no perder la visión nocturna"><span class="rm-label">Modo rojo</span><span class="rm-track" aria-hidden="true"><span class="rm-state">OFF</span><span class="rm-knob"></span></span></button></div>
   <section class="hero" aria-live="polite">
     <div id="heroMoon"></div>
     <div>
@@ -1470,20 +1500,20 @@ function drawSky(){
     const p=projectEquatorial(Math.atan2(ye,xe)/R,Math.asin(ze)/R);
     if(!p)continue;
     ctx.globalAlpha=.035+.055*(1-Math.abs(b)/15);
-    ctx.fillStyle="#9eb4ed";ctx.beginPath();ctx.arc(p.x,p.y,1.05+(1-Math.abs(b)/15)*.45,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle = redMode ? "#ff8a7a" : "#9eb4ed";ctx.beginPath();ctx.arc(p.x,p.y,1.05+(1-Math.abs(b)/15)*.45,0,Math.PI*2);ctx.fill();
   }
   // Galaxias destacadas por encima del horizonte.
   for(const galaxy of SKY_GALAXIES){
     const p=projectEquatorial(galaxy.ra,galaxy.dec);if(!p)continue;
-    ctx.globalAlpha=.82;ctx.strokeStyle="#d4c7ff";ctx.lineWidth=1;
+    ctx.globalAlpha=.82;ctx.strokeStyle = redMode ? "#ff6b5e" : "#d4c7ff";ctx.lineWidth=1;
     ctx.beginPath();ctx.ellipse(p.x,p.y,4.2,2.7,-.35,0,Math.PI*2);ctx.stroke();
   }
   for (const {x,y,magnitude} of projected.values()){
     const dot = Math.max(.65,Math.min(2,1.7-(magnitude+1)*.22));
     const opacity = Math.max(.22,Math.min(.95,.95-(magnitude+1.5)*.14));
     ctx.globalAlpha = opacity;
-    ctx.fillStyle = "#dce8ff";
-    ctx.shadowColor = "#b8d1ff";
+    ctx.fillStyle = redMode ? "#ffd9d4" : "#dce8ff";
+    ctx.shadowColor = redMode ? "#ff3b30" : "#b8d1ff";
     ctx.shadowBlur = magnitude < 1 ? 7 : 2.5;
     ctx.beginPath();
     ctx.arc(x,y,dot,0,Math.PI*2);
@@ -1514,6 +1544,24 @@ const key = d => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 const hora = d => d.toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
 
 const $ = id => document.getElementById(id);
+
+/* ---------- Modo rojo nocturno (visión nocturna, como en cielo-actual) ---------- */
+let redMode = false;
+try{ redMode = localStorage.getItem('luna-hoy-red-mode') === '1'; }catch(e){}
+function applyRedMode(){
+  const root = document.documentElement;
+  if (redMode) root.setAttribute('data-theme','red'); else root.removeAttribute('data-theme');
+  const b = document.querySelector('#redmode');
+  if (b){
+    b.setAttribute('aria-pressed', String(redMode));
+    b.setAttribute('aria-checked', String(redMode));
+    const st = b.querySelector('.rm-state');
+    if (st) st.textContent = redMode ? 'ON' : 'OFF';
+  }
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute('content', redMode ? '#1a0505' : '#05070d');
+  drawSky();
+}
 
 function hero(){
   const t = viewTime();
@@ -1574,7 +1622,13 @@ function renderPhases(){
     const dateText = dt.toLocaleDateString("es",{weekday:"short",day:"numeric",month:"short",timeZone:TZ});
     return '<li>' + moon(ev.i*90) + '<strong>' + MAIN[ev.i] + '</strong><span class="t">' + dateText + ' · ' + hora(dt) + '</span></li>';
   }).join("");
-}drawSky();
+}
+$("redmode").addEventListener("click", () => {
+  redMode = !redMode;
+  try{ localStorage.setItem('luna-hoy-red-mode', redMode ? '1' : '0'); }catch(e){}
+  applyRedMode();
+});
+applyRedMode();
 hero();
 tonight();
 renderPhases();
