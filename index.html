@@ -77,7 +77,14 @@ main>h2{font-size:1.6rem;text-transform:capitalize;margin:26px 0 12px}
 <body>
 <canvas id="sky" aria-hidden="true"></canvas>
 <main>
-  <h1>Luna hoy</h1>
+  <section class="hero" aria-live="polite">
+    <div id="heroMoon"></div>
+    <div>
+      <h1 id="heroName"></h1>
+      <p class="date" id="heroDate"></p>
+      <dl id="heroData"></dl>
+    </div>
+  </section>
 
   <section class="tonight" id="tonight" aria-live="polite"></section>
 
@@ -970,6 +977,17 @@ const hora = d => d.toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit
 
 const $ = id => document.getElementById(id);
 
+function hero(){
+  const today = cityDay(Date.now());
+  const noon = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 18);
+  const e = elong(noon);
+  $("heroMoon").innerHTML = moon(e, true);
+  $("heroName").textContent = nombre(e);
+  $("heroDate").textContent = today.toLocaleDateString("es", { weekday:"long", day:"numeric", month:"long", year:"numeric" }) + ", San Francisco del Oro";
+  const rs = riseSet(today.getFullYear(), today.getMonth(), today.getDate());
+  $("heroData").innerHTML = `<dt>Sale la luna</dt><dd>${hm(rs.rise)}</dd><dt>Se oculta la luna</dt><dd>${hm(rs.set)}</dd><dt>Iluminación</dt><dd>${Math.round(illum(e)*100)}%</dd><dt>Edad lunar</dt><dd>${(e/360*SYN).toFixed(1)} días</dd><dt>Fase</dt><dd>${e < 180 ? "Creciente" : "Menguante"}</dd>`;
+}
+
 function tonight(){
   const t = Date.now();
   const e = elong(t);
@@ -995,7 +1013,7 @@ function tonight(){
 
 window.addEventListener("resize",drawSky);
 window.addEventListener("scroll",drawSky,{passive:true});
-window.setInterval(() => { drawSky(); tonight(); renderPhases(); }, 60000);
+window.setInterval(() => { drawSky(); hero(); tonight(); renderPhases(); }, 60000);
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
 }
@@ -1014,6 +1032,7 @@ function renderPhases(){
   }).join("");
 }
 drawSky();
+hero();
 tonight();
 renderPhases();
 </script>
