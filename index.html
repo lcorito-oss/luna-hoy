@@ -60,6 +60,8 @@ h1,h2{font-family:Georgia,"Times New Roman",serif;font-weight:400;margin:0}
 .hero{display:flex;gap:28px;align-items:center;padding:20px 0 28px;flex-wrap:wrap}
 .hero img,.hero svg{display:block;width:min(190px,45vw);height:auto;flex:none;filter:drop-shadow(0 0 8px rgba(255,250,220,.58)) drop-shadow(0 0 22px rgba(233,230,218,.34)) drop-shadow(0 0 44px rgba(233,230,218,.18))}
 .hero h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.1}
+.hero .fullname{margin:2px 0 0;color:var(--accent);font-size:1.15rem}
+.hero .fullname:empty{display:none}
 .hero .date{color:var(--muted);margin:4px 0 14px;text-transform:capitalize}
 dl{display:grid;grid-template-columns:auto auto;gap:4px 28px;margin:0;font-size:1rem}
 dt{color:var(--muted)} dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
@@ -169,6 +171,7 @@ main>h2{font-size:1.6rem;text-transform:capitalize;margin:26px 0 12px}
     <div id="heroMoon"></div>
     <div>
       <h1 id="heroName"></h1>
+      <p class="fullname" id="heroFullName"></p>
       <p class="date" id="heroDate"></p>
       <dl id="heroData"></dl>
     </div>
@@ -1422,7 +1425,7 @@ const nombre = e => {
 };
 
 let moonCounter = 0;
-function moonSvg(e, size, shine){
+function moonSvg(e, size){
   const id = "moon-" + moonCounter++;
   const r = 46;
   const phase = ((e % 360) + 360) % 360;
@@ -1441,12 +1444,9 @@ function moonSvg(e, size, shine){
       '<circle cx="50" cy="50" r="46" fill="url(#' + id + '-shade)" opacity=".2"/>' +
       '</g>';
   }
-  let earthshine = "";
-  if (shine) {
-    earthshine = '<g clip-path="url(#' + darkClip + ')" opacity=".13">' +
-      '<use href="#moonPhoto" x="4" y="4" width="92" height="92"/>' +
-      '</g>';
-  }
+  const earthshine = '<g clip-path="url(#' + darkClip + ')" opacity=".08">' +
+    '<use href="#moonPhoto" x="4" y="4" width="92" height="92"/>' +
+    '</g>';
   return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" role="img" aria-label="' + nombre(e) + '">' +
     '<defs>' +
       '<radialGradient id="' + id + '-shade" cx="35%" cy="28%" r="85%"><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#252a32" stop-opacity=".72"/></radialGradient>' +
@@ -1460,7 +1460,7 @@ function moonSvg(e, size, shine){
     '<circle cx="50" cy="50" r="46" fill="none" stroke="#d5d3ca" stroke-opacity=".32" stroke-width="1.1"/>' +
     '</svg>';
 }
-function moon(e, big, shine){ return moonSvg(e, big ? 190 : 46, shine); }
+function moon(e, big){ return moonSvg(e, big ? 190 : 46); }
 
 const SKY_GALAXIES = [
   {name:"M31 Andrómeda",ra:10.6847,dec:41.2692},
@@ -1596,8 +1596,10 @@ function applyRedMode(){
 function hero(){
   const t = viewTime();
   const e = elong(t);
-  $("heroMoon").innerHTML = moon(e, true, true);
+  $("heroMoon").innerHTML = moon(e, true);
   $("heroName").textContent = nombre(e);
+  const fullEv = nombre(e) === "Luna llena" ? fullMoonEventFor(t) : null;
+  $("heroFullName").textContent = fullEv ? fullEv.nombre + (fullEv.tipo !== "Luna llena" ? " · " + fullEv.tipo : "") : "";
   const dstr = viewDate.toLocaleDateString("es", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
   const hh = String(Math.floor(viewMinutes/60)).padStart(2,"0") + ":" + String(viewMinutes%60).padStart(2,"0");
   $("heroDate").textContent = dstr + ", San Francisco del Oro" + (isViewingToday() ? "" : " · estás viendo otra fecha") + ((!isViewingToday() || viewMinutes !== 720) ? " · " + hh : "");
@@ -1645,10 +1647,14 @@ if ("serviceWorker" in navigator) {
 /* Un evento con nombre coincide con una fase si cae el mismo día local y es de ese tipo:
    Superluna, Luna llena y Luna azul son luna llena; el eclipse lunar también; la Luna negra es luna nueva. */
 const PHASE_FOR_EVENT = {"Superluna":2, "Luna llena":2, "Luna azul":2, "Eclipse lunar":2, "Luna negra":0};
+/* Evento con nombre de la luna llena de una fecha (de la tabla de eventos con nombre). */
+function fullMoonEventFor(t){
+  const day = cityDay(t).getTime();
+  return EVENTOS.find(ev => (ev.tipo === "Luna llena" || ev.tipo === "Superluna" || ev.tipo === "Luna azul") && cityDay(ev.t).getTime() === day) || null;
+}
 /* Nombre tradicional de la luna llena de una fecha (de la tabla de eventos con nombre). */
 function fullMoonNameFor(t){
-  const day = cityDay(t).getTime();
-  const naming = EVENTOS.find(ev => (ev.tipo === "Luna llena" || ev.tipo === "Superluna" || ev.tipo === "Luna azul") && cityDay(ev.t).getTime() === day);
+  const naming = fullMoonEventFor(t);
   return naming ? naming.nombre : null;
 }
 function phaseTitle(i, match){

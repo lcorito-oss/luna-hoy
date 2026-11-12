@@ -1,4 +1,4 @@
-const CACHE = "luna-hoy-v8";
+const CACHE = "luna-hoy-v9";
 const ASSETS = [
   "./",
   "./index.html",
