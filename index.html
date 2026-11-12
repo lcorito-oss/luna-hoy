@@ -122,7 +122,11 @@ main>h2{font-size:1.6rem;text-transform:capitalize;margin:26px 0 12px}
 .compass-data dl{margin:0 0 8px}
 .live{color:var(--accent);font-weight:600;margin:6px 0}
 .strip{display:flex;gap:8px;overflow-x:auto;padding:6px 2px;scrollbar-width:thin}
-.strip-day{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 6px;min-width:64px}
+.strip-day{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 6px}
+.strip-day svg{width:56px;height:56px}
+@media (max-width:600px){
+  .strip-day{flex:none;min-width:64px}
+}
 .strip-day.today{border-color:var(--accent);background:var(--accent-bg)}
 .strip-day .sd{font-size:.8rem;text-transform:capitalize}
 .strip-day .sp{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -149,7 +153,7 @@ main>h2{font-size:1.6rem;text-transform:capitalize;margin:26px 0 12px}
 .tl-naut{background:#1e3257}
 .tl-astro{background:#111a2c}
 .tl-noche{background:#05070d}
-.tl-mark{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:15px;line-height:1;text-shadow:0 0 3px #000}
+.tl-mark{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:15px;line-height:1;color:#fff;background:rgba(5,7,13,.88);border:1px solid rgba(255,255,255,.35);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;text-shadow:none;z-index:2}
 .tl-now{position:absolute;top:-5px;bottom:-5px;width:2px;background:#ff5a4e;z-index:1}
 .tl-now::after{content:"ahora";position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:.65rem;color:#ff5a4e}
 .tl-hours{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:4px}
@@ -937,6 +941,19 @@ function riseSet(y, m, d){
   }
   return out;
 }
+/* Próxima salida o puesta a partir de ahora: si la de hoy ya pasó o no
+   existe ese día, busca en los días siguientes. Así la cuenta atrás nunca
+   muestra "null" de noche, cuando los eventos de hoy ya pasaron. */
+function nextEvent(kind, from){
+  const start = from || Date.now();
+  for (let d = 0; d < 4; d++){
+    const day = new Date(cityDay(start).getTime() + d*86400000);
+    const rs = riseSet(day.getFullYear(), day.getMonth(), day.getDate());
+    const t = kind === "rise" ? rs.rise : rs.set;
+    if (t != null && t > start) return t;
+  }
+  return null;
+}
 /* ---------- Vista explorada (idea 2: explorador de fecha) ---------- */
 let viewDate = cityDay(Date.now());
 let viewMinutes = 720; // mediodía local, como el hero actual
@@ -1079,8 +1096,8 @@ function renderCompass(){
   const up = alt > 0;
   const estado = up ? "La Luna se ve ahora" : "La Luna está bajo el horizonte";
   let cuenta = "";
-  if (up && rs.set) cuenta = "Se pone " + enCuanto(rs.set);
-  else if (!up && rs.rise) cuenta = "Sale " + enCuanto(rs.rise);
+  if (up){ const t = nextEvent("set"); if (t != null) cuenta = "Se pone " + enCuanto(t); }
+  else { const t = nextEvent("rise"); if (t != null) cuenta = "Sale " + enCuanto(t); }
   $("donde").innerHTML =
     '<h2>¿Dónde miro?</h2>'
     + '<div class="compass-wrap">' + compassSvg(az, alt)
@@ -1608,8 +1625,8 @@ function hero(){
   let cuenta = "";
   if (isViewingToday()){
     const alt = moonPos(Date.now()).alt;
-    if (alt > 0 && rs.set) cuenta = "<dt>Ahora</dt><dd>Se pone " + enCuanto(rs.set) + "</dd>";
-    else if (alt <= 0 && rs.rise) cuenta = "<dt>Ahora</dt><dd>Sale " + enCuanto(rs.rise) + "</dd>";
+    if (alt > 0){ const t = nextEvent("set"); if (t != null) cuenta = "<dt>Ahora</dt><dd>Se pone " + enCuanto(t) + "</dd>"; }
+    else { const t = nextEvent("rise"); if (t != null) cuenta = "<dt>Ahora</dt><dd>Sale " + enCuanto(t) + "</dd>"; }
   }
   $("heroData").innerHTML = `<dt>Sale la luna</dt><dd>${hm(rs.rise)}</dd><dt>Se oculta la luna</dt><dd>${hm(rs.set)}</dd><dt>Iluminación</dt><dd>${Math.round(illum(e)*100)}%</dd><dt>Edad lunar</dt><dd>${(e/360*SYN).toFixed(1)} días</dd><dt>Fase</dt><dd>${e < 180 ? "Creciente" : "Menguante"}</dd><dt>Distancia</dt><dd>aprox. ${Math.round(dist).toLocaleString("es")} km</dd>` + cuenta;
 }function tonight(){
@@ -1629,8 +1646,8 @@ function hero(){
   }
   const visible = alt > 0;
   let cuenta = "";
-  if (visible && rs.set) cuenta = " · Se pone " + enCuanto(rs.set);
-  else if (!visible && rs.rise) cuenta = " · Sale " + enCuanto(rs.rise);
+  if (visible){ const t = nextEvent("set"); if (t != null) cuenta = " · Se pone " + enCuanto(t); }
+  else { const t = nextEvent("rise"); if (t != null) cuenta = " · Sale " + enCuanto(t); }
   $("tonight").innerHTML = moon(e) +
     '<div><h2>Esta noche</h2>' +
     '<p><span class="st' + (visible ? '' : ' down') + '">' + (visible ? "La Luna se ve ahora" : "La Luna está bajo el horizonte") + '</span>' +
